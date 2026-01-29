@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# PID for Chrome process
+CHROME_PID=""
+
+# Graceful shutdown function
+shutdown() {
+  echo "Shutting down Chrome gracefully..."
+  
+  if [[ -n "${CHROME_PID}" ]] && kill -0 "${CHROME_PID}" 2>/dev/null; then
+    kill -TERM "${CHROME_PID}" 2>/dev/null || true
+    # Wait up to 10 seconds for Chrome to exit
+    for _ in $(seq 1 100); do
+      if ! kill -0 "${CHROME_PID}" 2>/dev/null; then
+        break
+      fi
+      sleep 0.1
+    done
+    # Force kill if still running
+    kill -KILL "${CHROME_PID}" 2>/dev/null || true
+  fi
+  
+  exit 0
+}
+
+trap shutdown TERM INT
+
 export DISPLAY=:1
 export HOME=/tmp/moltbot-home
 export XDG_CONFIG_HOME="${HOME}/.config"
@@ -13,6 +38,11 @@ ENABLE_NOVNC="${CLAWDBOT_BROWSER_ENABLE_NOVNC:-1}"
 HEADLESS="${CLAWDBOT_BROWSER_HEADLESS:-0}"
 
 mkdir -p "${HOME}" "${HOME}/.chrome" "${XDG_CONFIG_HOME}" "${XDG_CACHE_HOME}"
+
+# Remove stale Chrome lockfiles from previous runs
+rm -f "${HOME}/.chrome/SingletonLock"
+rm -f "${HOME}/.chrome/SingletonSocket"
+rm -f "${HOME}/.chrome/SingletonCookie"
 
 Xvfb :1 -screen 0 1280x800x24 -ac -nolisten tcp &
 
@@ -47,6 +77,7 @@ CHROME_ARGS+=(
 )
 
 chromium "${CHROME_ARGS[@]}" about:blank &
+CHROME_PID=$!
 
 for _ in $(seq 1 50); do
   if curl -sS --max-time 1 "http://127.0.0.1:${CHROME_CDP_PORT}/json/version" >/dev/null; then
