@@ -67,13 +67,15 @@ CHROME_ARGS+=(
   "--user-data-dir=${HOME}/.chrome"
   "--no-first-run"
   "--no-default-browser-check"
-  "--disable-dev-shm-usage"
   "--disable-background-networking"
   "--disable-features=TranslateUI"
   "--disable-breakpad"
   "--disable-crash-reporter"
   "--metrics-recording-only"
   "--no-sandbox"
+  "--disable-web-security"
+  "--disable-features=IsolateOrigins,site-per-process"
+  "--disable-site-isolation-trials"
 )
 
 chromium "${CHROME_ARGS[@]}" about:blank &
@@ -87,8 +89,8 @@ for _ in $(seq 1 50); do
 done
 
 socat \
-  TCP-LISTEN:"${CDP_PORT}",fork,reuseaddr,bind=0.0.0.0 \
-  TCP:127.0.0.1:"${CHROME_CDP_PORT}" &
+  TCP-LISTEN:"${CDP_PORT}",fork,reuseaddr,bind=0.0.0.0,keepalive,keepidle=10,keepintvl=5,keepcnt=3 \
+  TCP:127.0.0.1:"${CHROME_CDP_PORT}",keepalive,keepidle=10,keepintvl=5,keepcnt=3 &
 
 if [[ "${ENABLE_NOVNC}" == "1" && "${HEADLESS}" != "1" ]]; then
   x11vnc -display :1 -rfbport "${VNC_PORT}" -shared -forever -nopw -localhost &
