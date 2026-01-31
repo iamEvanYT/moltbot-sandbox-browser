@@ -67,15 +67,11 @@ CHROME_ARGS+=(
   "--user-data-dir=${HOME}/.chrome"
   "--no-first-run"
   "--no-default-browser-check"
-  "--disable-background-networking"
   "--disable-features=TranslateUI"
   "--disable-breakpad"
   "--disable-crash-reporter"
   "--metrics-recording-only"
   "--no-sandbox"
-  "--disable-web-security"
-  "--disable-features=IsolateOrigins,site-per-process"
-  "--disable-site-isolation-trials"
 )
 
 chromium "${CHROME_ARGS[@]}" about:blank &
