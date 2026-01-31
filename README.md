@@ -61,3 +61,31 @@ services:
 | `CLAWDBOT_BROWSER_NOVNC_PORT`   | 6080    | NoVNC port                            |
 | `CLAWDBOT_BROWSER_ENABLE_NOVNC` | 1       | Enable NoVNC (0 to disable)           |
 | `CLAWDBOT_BROWSER_HEADLESS`     | 0       | Run in headless mode (1 for headless) |
+
+## Persisting Browser Data
+
+To persist browser data (cookies, local storage, history, etc.) across container restarts, mount a volume to `/home/sandbox-browser/.chrome`:
+
+```bash
+docker run -d \
+  --shm-size=2gb \
+  -p 9222:9222 \
+  -v chrome-data:/home/sandbox-browser/.chrome \
+  ghcr.io/iamevanyt/openclaw-sandbox-browser
+```
+
+Or with Docker Compose:
+
+```yaml
+services:
+  browser:
+    image: ghcr.io/iamevanyt/openclaw-sandbox-browser
+    shm_size: 2gb
+    ports:
+      - "9222:9222"
+    volumes:
+      - chrome-data:/home/sandbox-browser/.chrome
+
+volumes:
+  chrome-data:
+```
