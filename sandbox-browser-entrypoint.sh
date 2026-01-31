@@ -72,6 +72,8 @@ CHROME_ARGS+=(
   "--disable-crash-reporter"
   "--metrics-recording-only"
   "--no-sandbox"
+  "--enable-features=NetworkService,NetworkServiceInProcess"
+  "--disable-blink-features=AutomationControlled"
 )
 
 chromium "${CHROME_ARGS[@]}" about:blank &
