@@ -2,19 +2,17 @@ FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install dependencies
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    bash \
     ca-certificates \
     curl \
     fonts-liberation \
     fonts-noto-color-emoji \
-    git \
     gnupg \
-    jq \
     novnc \
-    python3 \
     socat \
+    unzip \
     websockify \
     wget \
     x11-utils \
@@ -26,9 +24,19 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends google-chrome-stable \
   && rm -rf /var/lib/apt/lists/*
 
-COPY sandbox-browser-entrypoint.sh /usr/local/bin/openclaw-sandbox-browser
-RUN chmod +x /usr/local/bin/openclaw-sandbox-browser
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash \
+  && mv /root/.bun/bin/bun /usr/local/bin/
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json ./
+RUN bun install
+
+# Copy source code
+COPY src ./src
 
 EXPOSE 9222 5900 6080
 
-CMD ["openclaw-sandbox-browser"]
+CMD ["bun", "run", "start"]
